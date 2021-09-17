@@ -65,7 +65,8 @@ class Service {
         try {
             $resp = null;
             $this->handleCors();
-            $path = substr($_SERVER['REQUEST_URI'], strlen($this->cfg->basePath));
+            $basePath = parse_url($this->cfg->baseUrl, PHP_URL_PATH);
+            $path = substr($_SERVER['REQUEST_URI'], strlen($basePath));
             $path = preg_replace('|/?([?].*)?$|', '', $path) ?: '';
             switch ($path) {
                 case 'reconcile':
@@ -83,7 +84,7 @@ class Service {
                     $resp = $this->handleDataExtension();
                     break;
                 default:
-                    throw new RuntimeException("Page not found. Service's manifest is available on " . $this->cfg->basePath . "reconcile", 404);
+                    throw new RuntimeException("Page not found. Service's manifest is available on " . $this->cfg->baseUrl . "reconcile", 404);
             }
             if ($resp !== null) {
                 header('Content-Type: application/json');
@@ -127,29 +128,29 @@ class Service {
             'defaultTypes'    => $this->cfg->types ?? [['id' => 'defaultType', 'name' => 'defaultType']],
             /*
               'view'            => [
-              'url' => $this->cfg->basePath . 'preview?id={{id}}',
+              'url' => $this->cfg->baseUrl . 'preview?id={{id}}',
               ],
               'feature_view'    => [
-              'url' => $this->cfg->basePath . 'preview?id={{id}}',
+              'url' => $this->cfg->baseUrl . 'preview?id={{id}}',
               ],
              */
             'preview'         => [
-                'url'    => $this->cfg->basePath . 'preview?id={{id}}',
+                'url'    => $this->cfg->baseUrl . 'preview?id={{id}}',
                 'width'  => 100,
                 'height' => 100,
             ],
             'suggest'         => [
                 'entity' => [
-                    'service_url'  => $this->cfg->basePath . 'suggest',
+                    'service_url'  => $this->cfg->baseUrl . 'suggest',
                     'service_path' => '/' . self::SUGGESTTYPE_ENTITY,
                 ],
                 'type'   => [
-                    'service_url'  => $this->cfg->basePath . 'suggest',
+                    'service_url'  => $this->cfg->baseUrl . 'suggest',
                     'service_path' => '/' . self::SUGGESTTYPE_TYPE,
                 ],
             /*
               'property' => [
-              'service_url'  => $this->cfg->basePath . 'suggest',
+              'service_url'  => $this->cfg->baseUrl . 'suggest',
               'service_path' => '/' . self::SUGGESTTYPE_PROPERTY,
               ],
              */
@@ -232,7 +233,8 @@ class Service {
      */
     private function handleSuggestEntity(string $prefix, int $cursor): array {
         $query = Query::fromSuggest($prefix, $this->cfg);
-        return $query->getSuggestEntities($this->pdo, $cursor);
+        $results = $query->getSuggestEntities($this->pdo, $cursor);
+        return ['result' => $results];
     }
 
     /**
@@ -249,7 +251,7 @@ class Service {
                 $results[] = $type;
             }
         }
-        return $results;
+        return ['result' => $results];
     }
     
     /**

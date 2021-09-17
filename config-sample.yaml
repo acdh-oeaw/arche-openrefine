@@ -1,5 +1,5 @@
 # must contain trailing /
-basePath: https://arche.acdh.oeaw.ac.at/openrefine/
+baseUrl: https://arche.acdh.oeaw.ac.at/openrefine/
 dbConnStr: 'dbname=www-data user=guest'
 name: ARCHE
 identifierSpace: https://arche.acdh.oeaw.ac.at/api/
