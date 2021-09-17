@@ -1,0 +1,26 @@
+{
+    "name": "acdh-oeaw/arche-openrefine",
+    "type": "project",
+    "description": "OpenRefine API implementation on top of the ARCHE Suite",
+    "keywords": [],
+    "homepage": "https://github.com/acdh-oeaw/arche-openrefine",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mateusz Żółtak",
+            "email": "mzoltak@oeaw.ac.at"
+        }
+    ],
+    "require": {
+        "php": ">=8",
+        "zozlak/query-part": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "acdhOeaw\\": "src/acdhOeaw"
+        }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "*"
+    }
+}
