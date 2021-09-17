@@ -40,7 +40,7 @@ class Query {
     const STRICT_ALL    = 'all';
     const STRICT_ANY    = 'any';
 
-    static public function fromSuggest(string $prefix, object $config) {
+    static public function fromSuggest(string $prefix, object $config): self {
         return new Query(['query' => "$prefix%"], $config);
     }
 
@@ -61,6 +61,11 @@ class Query {
     private string $typeStrict = self::STRICT_ALL;
     private object $cfg;
 
+    /**
+     * 
+     * @param array<string, mixed> $query
+     * @param object $config
+     */
     public function __construct(array $query, object $config) {
         $this->properties = [];
         foreach ($query as $key => $value) {
@@ -80,6 +85,11 @@ class Query {
         }
     }
 
+    /**
+     * 
+     * @param PDO $pdo
+     * @return array<int, mixed>
+     */
     public function getMatches(PDO $pdo): array {
         $typeClause = $this->getTypeWhereClause();
         $outQuery   = $this->getOutputQuery();
@@ -127,6 +137,12 @@ class Query {
         return $results;
     }
 
+    /**
+     * 
+     * @param PDO $pdo
+     * @param int $offset
+     * @return array<int, mixed>
+     */
     public function getSuggestEntities(PDO $pdo, int $offset): array {
         $typeClause = $this->getTypeWhereClause();
         $outQuery   = $this->getOutputQuery();
@@ -176,6 +192,10 @@ class Query {
         return $results;
     }
 
+    /**
+     * 
+     * @return QueryPart
+     */
     private function getOutputQuery(): QueryPart {
         $query = "
             JOIN (
@@ -208,6 +228,11 @@ class Query {
         return $query;
     }
 
+    /**
+     * 
+     * @param array<string, string> $data
+     * @return string|null
+     */
     private function getBestLanguage(array $data): ?string {
         foreach ($this->cfg->preferredLangs as $l) {
             if (isset($data[$l])) {
@@ -217,10 +242,19 @@ class Query {
         return array_pop($data);
     }
 
+    /**
+     * 
+     * @return string
+     */
     private function getTypeWhereClause(): string {
         return substr(str_repeat(', ?', count($this->type)), 2);
     }
 
+    /**
+     * 
+     * @param array<string, mixed> $properties
+     * @return float
+     */
     private function computeScore(array $properties): float {
         $pw    = $this->cfg->propertyWeights;
         $score = 0;

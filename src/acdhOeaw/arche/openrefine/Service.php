@@ -44,6 +44,10 @@ class Service {
     private object $cfg;
     private PDO $pdo;
 
+    /**
+     * 
+     * @param object $config
+     */
     public function __construct(object $config) {
         $this->cfg = $config;
         $this->pdo = new PDO('pgsql: ' . $this->cfg->dbConnStr);
@@ -52,22 +56,28 @@ class Service {
         $this->pdo->query("SET application_name TO openrefineapi");
     }
 
+    /**
+     * 
+     * @return void
+     * @throws RuntimeException
+     */
     public function handleRequest(): void {
         try {
+            $resp = null;
             $this->handleCors();
             $path = substr($_SERVER['REQUEST_URI'], strlen($this->cfg->basePath));
-            $path = preg_replace('|/?([?].*)?$|', '', $path);
+            $path = preg_replace('|/?([?].*)?$|', '', $path) ?: '';
             switch ($path) {
                 case 'reconcile':
                     $resp = count($_GET) > 0 ? $this->handleReconcile() : $this->handleManifest();
                     break;
                 case 'preview':
-                    $resp = $this->handlePreview();
+                    $this->handlePreview();
                     break;
                 case 'suggest/' . self::SUGGESTTYPE_ENTITY:
                 case 'suggest/' . self::SUGGESTTYPE_TYPE:
                 case 'suggest/' . self::SUGGESTTYPE_PROPERTY:
-                    $resp = $this->handleSuggest(preg_replace('|^.*/|', '', $path));
+                    $resp = $this->handleSuggest(preg_replace('|^.*/|', '', $path) ?: '');
                     break;
                 case 'dataExtension':
                     $resp = $this->handleDataExtension();
@@ -91,6 +101,10 @@ class Service {
         }
     }
 
+    /**
+     * 
+     * @return void
+     */
     private function handleCors(): void {
         $cors = $this->cfg->cors ?? '*';
         if ($cors === '__secure__') {
@@ -100,6 +114,10 @@ class Service {
         header("Access-Control-Allow-Origin: $cors");
     }
 
+    /**
+     * 
+     * @return object
+     */
     private function handleManifest(): object {
         $data = [
             'versions'        => ['0.1', '0.2'],
@@ -158,6 +176,11 @@ class Service {
         return (object) $data;
     }
 
+    /**
+     * 
+     * @return object
+     * @throws RuntimeException
+     */
     private function handleReconcile(): object {
         $queries = $_GET['queries'] ?? $_POST['queries'] ?? '[]';
         $queries = json_decode($queries, true);
@@ -172,12 +195,22 @@ class Service {
         return (object) $response;
     }
 
+    /**
+     * 
+     * @return void
+     */
     private function handlePreview(): void {
         $id = $_GET['id'] ?? '';
         http_response_code(302);
         header('Location: ' . $this->cfg->identifierSpace . "/$id/metadata");
     }
 
+    /**
+     * 
+     * @param string $type
+     * @return array<int, mixed>
+     * @throws RuntimeException
+     */
     private function handleSuggest(string $type): array {
         $prefix = $_GET['prefix'] ?? '';
         $cursor = (int) ($_GET['cursor'] ?? 0); // how many to skip
@@ -191,11 +224,23 @@ class Service {
         }
     }
 
+    /**
+     * 
+     * @param string $prefix
+     * @param int $cursor
+     * @return array<int, mixed>
+     */
     private function handleSuggestEntity(string $prefix, int $cursor): array {
         $query = Query::fromSuggest($prefix, $this->cfg);
         return $query->getSuggestEntities($this->pdo, $cursor);
     }
 
+    /**
+     * 
+     * @param string $prefix
+     * @param int $cursor
+     * @return array<int, mixed>
+     */
     private function handleSuggestType(string $prefix, int $cursor): array {
         $prefix  = mb_strtolower($prefix);
         $results = [];
@@ -205,5 +250,14 @@ class Service {
             }
         }
         return $results;
+    }
+    
+    /**
+     * 
+     * @return object
+     * @throws RuntimeException
+     */
+    private function handleDataExtension(): object {
+        throw new RuntimeException('Not implemented', 404);
     }
 }
