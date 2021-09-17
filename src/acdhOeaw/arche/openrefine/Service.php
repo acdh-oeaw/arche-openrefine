@@ -127,29 +127,29 @@ class Service {
             'defaultTypes'    => $this->cfg->types ?? [['id' => 'defaultType', 'name' => 'defaultType']],
             /*
               'view'            => [
-              'url' => $this->cfg->basePath . '/preview?id={{id}}',
+              'url' => $this->cfg->basePath . 'preview?id={{id}}',
               ],
               'feature_view'    => [
-              'url' => $this->cfg->basePath . '/preview?id={{id}}',
+              'url' => $this->cfg->basePath . 'preview?id={{id}}',
               ],
              */
             'preview'         => [
-                'url'    => $this->cfg->basePath . '/preview?id={{id}}',
+                'url'    => $this->cfg->basePath . 'preview?id={{id}}',
                 'width'  => 100,
                 'height' => 100,
             ],
             'suggest'         => [
                 'entity' => [
-                    'service_url'  => $this->cfg->basePath . '/suggest',
+                    'service_url'  => $this->cfg->basePath . 'suggest',
                     'service_path' => '/' . self::SUGGESTTYPE_ENTITY,
                 ],
                 'type'   => [
-                    'service_url'  => $this->cfg->basePath . '/suggest',
+                    'service_url'  => $this->cfg->basePath . 'suggest',
                     'service_path' => '/' . self::SUGGESTTYPE_TYPE,
                 ],
             /*
               'property' => [
-              'service_url'  => $this->cfg->basePath . '/suggest',
+              'service_url'  => $this->cfg->basePath . 'suggest',
               'service_path' => '/' . self::SUGGESTTYPE_PROPERTY,
               ],
              */
@@ -202,7 +202,7 @@ class Service {
     private function handlePreview(): void {
         $id = $_GET['id'] ?? '';
         http_response_code(302);
-        header('Location: ' . $this->cfg->identifierSpace . "/$id/metadata");
+        header('Location: ' . $this->cfg->identifierSpace . "$id/metadata");
     }
 
     /**

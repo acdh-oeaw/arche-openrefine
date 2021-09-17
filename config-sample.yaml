@@ -1,3 +1,4 @@
+# must contain trailing /
 basePath: /openrefine/
 dbConnStr: 'dbname=www-data user=guest'
 name: ARCHE
