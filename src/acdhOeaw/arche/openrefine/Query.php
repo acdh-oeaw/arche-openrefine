@@ -124,6 +124,7 @@ class Query {
         $stmt       = $pdo->prepare($query->query);
         $stmt->execute($query->param);
         $results    = [];
+        $scores     = [];
         while ($i          = $stmt->fetch(PDO::FETCH_OBJ)) {
             $i->name        = $this->getBestLanguage(json_decode($i->name, true));
             $i->description = $this->getBestLanguage(json_decode($i->description, true) ?? [
@@ -133,8 +134,10 @@ class Query {
             $i->features    = json_decode($i->features);
             $i->score       = $this->computeScore($i->features);
             $results[]      = $i;
+            $scores[]       = $i->score;
         }
-        return $results;
+        array_multisort($scores, SORT_DESC, SORT_NUMERIC, $results);
+        return array_slice($results, 0, $this->limit);
     }
 
     /**
@@ -266,3 +269,4 @@ class Query {
         return $score;
     }
 }
+
