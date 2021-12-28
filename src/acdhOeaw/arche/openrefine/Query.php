@@ -51,7 +51,7 @@ class Query {
      * @var array<string>
      */
     private array $type  = [];
-    private int $limit = 0;
+    private int $limit = PHP_INT_MAX;
 
     /**
      * 
