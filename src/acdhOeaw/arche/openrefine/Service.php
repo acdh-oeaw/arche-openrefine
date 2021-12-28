@@ -126,10 +126,10 @@ class Service {
             'identifierSpace' => $this->cfg->identifierSpace,
             'schemaSpace'     => $this->cfg->schemaSpace,
             'defaultTypes'    => $this->cfg->types ?? [['id' => 'defaultType', 'name' => 'defaultType']],
+            'view'            => [
+              'url' => $this->cfg->viewUrl,
+            ],
             /*
-              'view'            => [
-              'url' => $this->cfg->baseUrl . 'preview?id={{id}}',
-              ],
               'feature_view'    => [
               'url' => $this->cfg->baseUrl . 'preview?id={{id}}',
               ],
