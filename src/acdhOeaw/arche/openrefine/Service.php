@@ -70,7 +70,7 @@ class Service {
             $path = preg_replace('|/?([?].*)?$|', '', $path) ?: '';
             switch ($path) {
                 case 'reconcile':
-                    $resp = count($_GET) > 0 ? $this->handleReconcile() : $this->handleManifest();
+                    $resp = count($_GET) + count($_POST) > 0 ? $this->handleReconcile() : $this->handleManifest();
                     break;
                 case 'preview':
                     $this->handlePreview();
@@ -136,8 +136,8 @@ class Service {
              */
             'preview'         => [
                 'url'    => $this->cfg->baseUrl . 'preview?id={{id}}',
-                'width'  => 100,
-                'height' => 100,
+                'width'  => 600,
+                'height' => 400,
             ],
             'suggest'         => [
                 'entity' => [
