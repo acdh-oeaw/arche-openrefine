@@ -63,11 +63,11 @@ class Service {
      */
     public function handleRequest(): void {
         try {
-            $resp = null;
+            $resp     = null;
             $this->handleCors();
             $basePath = parse_url($this->cfg->baseUrl, PHP_URL_PATH);
-            $path = substr($_SERVER['REQUEST_URI'], strlen($basePath));
-            $path = preg_replace('|/?([?].*)?$|', '', $path) ?: '';
+            $path     = substr($_SERVER['REQUEST_URI'], strlen($basePath));
+            $path     = preg_replace('|/?([?].*)?$|', '', $path) ?: '';
             switch ($path) {
                 case 'reconcile':
                     $resp = count($_GET) + count($_POST) > 0 ? $this->handleReconcile() : $this->handleManifest();
@@ -80,8 +80,8 @@ class Service {
                 case 'suggest/' . self::SUGGESTTYPE_PROPERTY:
                     $resp = $this->handleSuggest(preg_replace('|^.*/|', '', $path) ?: '');
                     break;
-                case 'dataExtension':
-                    $resp = $this->handleDataExtension();
+                case 'properties':
+                    $resp = $this->handlePropertyProposal();
                     break;
                 default:
                     throw new RuntimeException("Page not found. Service's manifest is available on " . $this->cfg->baseUrl . "reconcile", 404);
@@ -127,7 +127,7 @@ class Service {
             'schemaSpace'     => $this->cfg->schemaSpace,
             'defaultTypes'    => $this->cfg->types ?? [['id' => 'defaultType', 'name' => 'defaultType']],
             'view'            => [
-              'url' => $this->cfg->viewUrl,
+                'url' => $this->cfg->viewUrl,
             ],
             /*
               'feature_view'    => [
@@ -155,25 +155,29 @@ class Service {
               ],
              */
             ],
-            /*
-              'extend'          => [
-              'propose_properties' => [
-              'service_url'  => '',
-              'service_path' => '',
-              ],
-              'property_settings'  => [
-              [
-              'name'      => '',
-              'label'     => '',
-              'type'      => '',
-              'default'   => '',
-              'help_test' => '',
-              'choices'   => [''],
-              ],
-              ]
-              ],
-             */
+            'extend'          => [
+                'propose_properties' => [
+                    'service_url'  => $this->cfg->baseUrl . 'properties',
+                    'service_path' => '',
+                ],
+                'property_settings'  => [],
+            ],
         ];
+        foreach ($this->cfg->properties as $id => $i) {
+            $p = [
+                'name'      => $id,
+                'label'     => $i->name ?? $id, // the reconciliation API is messy like a hell
+                'type'      => $i->type,
+                'help_text' => $i->help_text ?? ($i->name ?? $id),
+            ];
+            if (isset($i->choices)) {
+                $p['choices'] = $i->choices;
+            }
+            if (isset($i->default)) {
+                $p['default'] = $default;
+            }
+            $data['extend']['property_settings'][] = $p;
+        }
         return (object) $data;
     }
 
@@ -183,6 +187,12 @@ class Service {
      * @throws RuntimeException
      */
     private function handleReconcile(): object {
+        $extend = $_GET['extend'] ?? $_POST['extend'] ?? null;
+        if (!empty($extend)) {
+            $query = json_decode($extend);
+            return $this->handleDataExtensionQuery($query->ids, $query->properties);
+        }
+
         $queries = $_GET['queries'] ?? $_POST['queries'] ?? '[]';
         $queries = json_decode($queries, true);
         if ($queries === false || !is_array($queries)) {
@@ -232,7 +242,7 @@ class Service {
      * @return array<int, mixed>
      */
     private function handleSuggestEntity(string $prefix, int $cursor): array {
-        $query = Query::fromSuggest($prefix, $this->cfg);
+        $query   = Query::fromSuggest($prefix, $this->cfg);
         $results = $query->getSuggestEntities($this->pdo, $cursor);
         return ['result' => $results];
     }
@@ -253,13 +263,113 @@ class Service {
         }
         return ['result' => $results];
     }
-    
-    /**
-     * 
-     * @return object
-     * @throws RuntimeException
-     */
-    private function handleDataExtension(): object {
-        throw new RuntimeException('Not implemented', 404);
+
+    private function handlePropertyProposal(): object {
+        $type  = $_GET['type'];
+        $limit = $_GET['limit'] ?? \PHP_INT_MAX;
+
+        $response = (object) [
+                'type'       => $type,
+                'limit'      => $limit,
+                'properties' => [],
+        ];
+
+        $typeDef = null;
+        foreach ($this->cfg->types as $i) {
+            if ($i->id === $type || $i->name === $type) {
+                $typeDef = $i;
+                break;
+            }
+        }
+        if ($type !== '' && $typeDef === null) {
+            return $response;
+        }
+
+        foreach ($this->cfg->properties as $id => $p) {
+            if ($type === '' || in_array($typeDef->id, $p->types) || in_array($typeDef->name, $p->types)) {
+                $response->properties[] = (object) [
+                        'id'   => $id,
+                        'name' => $p->name ?? $id,
+                ];
+                if (count($response->properties) >= $limit) {
+                    break;
+                }
+            }
+        }
+        return $response;
+    }
+
+    private function handleDataExtensionQuery(array $ids, array $properties): object {
+        $response = (object) [
+                'meta' => [],
+                'rows' => [],
+        ];
+        $propStub = [];
+        $propCfg  = [];
+        foreach ($properties as $p) {
+            $pid = $p->id;
+            if (!isset($this->cfg->properties->$pid)) {
+                continue;
+            }
+            $response->meta[] = (object) [
+                    'id'   => $pid,
+                    'name' => $this->cfg->properties->$pid->name ?? $pid,
+            ];
+            $propStub[$pid]   = [];
+            $propCfg[$pid]    = $this->cfg->properties->$pid;
+        }
+        foreach ($ids as $id) {
+            $response->rows[$id] = (object) $propStub;
+        }
+        if (count($propCfg) === 0 || count($ids) === 0) {
+            return $response;
+        }
+
+        // data
+        $query = "
+            WITH idf AS (
+                SELECT DISTINCT id
+                FROM identifiers
+                WHERE id IN (" . substr(str_repeat('?, ', count($ids)), 0, -2) . ")
+            )
+        ";
+        $param = $ids;
+        $n     = 0;
+        foreach ($propCfg as $pid => $pcfg) {
+            $filter = '';
+            $query  .= $n > 0 ? "UNION ALL" : '';
+            if ($pcfg->property !== $this->cfg->schema->idProp) {
+                $tmpl    = "
+                    SELECT id, ?::text AS property, value
+                    FROM metadata_view d JOIN idf USING (id)
+                    WHERE property = ? %s
+                ";
+                $param[] = $pid;
+                $param[] = $pcfg->property;
+                if (isset($pcfg->filter)) {
+                    $param[] = $pcfg->filter;
+                    $filter  = "AND value ~ ?";
+                }
+            } else {
+                $tmpl    = "
+                    SELECT id, ?::text AS property, d.ids AS value
+                    FROM identifiers d JOIN idf USING (id)
+                    %s
+                ";
+                $param[] = $pid;
+                if (isset($pcfg->filter)) {
+                    $param[] = $pcfg->filter;
+                    $filter  = "WHERE d.ids ~ ?";
+                }
+            }
+            $query .= sprintf($tmpl, $filter);
+            $n++;
+        }
+        $query = $this->pdo->prepare($query);
+        $query->execute($param);
+        while ($r     = $query->fetchObject()) {
+            $response->rows[$r->id]->{$r->property}[] = [$propCfg[$r->property]->valueType => $r->value];
+        }
+        return $response;
     }
 }

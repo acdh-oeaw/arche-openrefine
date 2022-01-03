@@ -29,6 +29,7 @@ schema:
   nameProp: https://vocabs.acdh.oeaw.ac.at/schema#hasTitle
   descriptionProp: https://vocabs.acdh.oeaw.ac.at/schema#hasDescription
   typeProp: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+  idProp: https://vocabs.acdh.oeaw.ac.at/schema#hasIdentifier  
 partialMatchCoefficient: 0.5
 matchThreshold: 10
 propertyWeights:
@@ -37,3 +38,28 @@ propertyWeights:
   'https://vocabs.acdh.oeaw.ac.at/schema#hasTitle': 50
   'https://vocabs.acdh.oeaw.ac.at/schema#hasFirstName': 25
   'https://vocabs.acdh.oeaw.ac.at/schema#hasDescription': 10
+# DataExtensionService (https://reconciliation-api.github.io/specs/latest/#data-extension-service) config
+properties:
+  # property id
+  gndId:
+    # optional
+    name: GND Id
+    # number/text/checkbox/select (https://reconciliation-api.github.io/specs/latest/#data-extension-metadata)
+    type: text
+    # JSON property used to provide property values (https://reconciliation-api.github.io/specs/latest/#data-extension-response-schema)
+    # float/int/str/date
+    valueType: str
+    # RDF property to read values from
+    property: https://vocabs.acdh.oeaw.ac.at/schema#hasIdentifier
+    # optional regex filter for RDF property values
+    filter: "^https://d-nb.info/gnd/"
+    # applicable types (both type id and name can be used)
+    types:
+    - organisation
+    - person
+  latitude:
+    type: text
+    valueType: float
+    property: https://vocabs.acdh.oeaw.ac.at/schema#hasLatitude
+    types:
+    - place
