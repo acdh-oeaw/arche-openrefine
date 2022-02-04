@@ -96,12 +96,12 @@ class Query {
         $query      = "
             WITH r AS (
                 SELECT
-                    m1.id, 
-                    json_agg(json_build_object('id', m1.property, 'value', CASE f.raw = ? WHEN true THEN 1.0 ELSE ? END)) AS features
+                    coalesce(m1.id, f.iid) AS id, 
+                    json_agg(json_build_object('id', coalesce(m1.property, ?::text), 'value', CASE f.raw = ? WHEN true THEN 1.0 ELSE ? END)) AS features
                 FROM 
                     full_text_search f 
-                    JOIN metadata m1 USING (mid)
-                    JOIN metadata m2 ON m1.id = m2.id AND m2.property = ?
+                    LEFT JOIN metadata m1 USING (mid)
+                    JOIN metadata m2 ON coalesce(m1.id, f.iid) = m2.id AND m2.property = ?
                 WHERE
                     websearch_to_tsquery('simple', ?) @@ segments
                     AND substring(m2.value, 1, 1000) IN ($typeClause)
@@ -114,7 +114,7 @@ class Query {
         ";
         $param      = array_merge(
             [
-                $this->query, $this->cfg->partialMatchCoefficient,
+                $this->cfg->schema->idProp, $this->query, $this->cfg->partialMatchCoefficient,
                 $this->cfg->schema->typeProp, $this->query
             ],
             $this->type,
