@@ -282,7 +282,9 @@ class Service {
             }
         }
         if ($type !== '' && $typeDef === null) {
-            return $response;
+            // OpenRefine 3.5 sends type={service's schemaSpace} which obviously doesn't match any property...
+            $type = '';
+            //return $response;
         }
 
         foreach ($this->cfg->properties as $id => $p) {
