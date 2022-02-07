@@ -31,3 +31,6 @@ Allows to use the ARCHE Suite as a reconciliation backend for the [OpenRefine](h
   ```
 * Adjust settings in `config.yaml`
 
+## Sample instance
+
+A sample instance which is running on top of the [ARCHE](http://arche.acdh.oeaw.ac.at/) repository has its manifest at arche.acdh.oeaw.ac.at/openrefine/reconcile.
