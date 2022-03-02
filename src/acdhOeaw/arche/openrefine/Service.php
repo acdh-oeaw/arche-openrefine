@@ -282,7 +282,7 @@ class Service {
             }
         }
         if ($type !== '' && $typeDef === null) {
-            // OpenRefine 3.5 sends type={service's schemaSpace} which obviously doesn't match any property...
+            // OpenRefine 3.5 sends type={service's schemaSpace} which obviously doesn't match any type...
             $type = '';
             //return $response;
         }

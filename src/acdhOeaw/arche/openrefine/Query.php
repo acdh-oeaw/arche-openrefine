@@ -242,7 +242,7 @@ class Query {
                 return $data[$l];
             }
         }
-        return array_pop($data);
+        return array_pop($data) ?? '';
     }
 
     /**
