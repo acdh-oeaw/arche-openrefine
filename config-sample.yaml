@@ -1,6 +1,6 @@
 # must contain trailing /
 baseUrl: https://arche.acdh.oeaw.ac.at/openrefine/
-dbConnStr: 'dbname=www-data user=guest'
+dbConnStr: 'pgsql: dbname=www-data user=guest'
 name: ARCHE
 identifierSpace: https://arche.acdh.oeaw.ac.at/api/
 schemaSpace: https://vocabs.acdh.oeaw.ac.at/schema#

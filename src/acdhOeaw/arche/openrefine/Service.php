@@ -50,7 +50,7 @@ class Service {
      */
     public function __construct(object $config) {
         $this->cfg = $config;
-        $this->pdo = new PDO('pgsql: ' . $this->cfg->dbConnStr);
+        $this->pdo = new PDO($this->cfg->dbConnStr);
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->pdo->query("SET TRANSACTION READ ONLY");
         $this->pdo->query("SET application_name TO openrefineapi");
