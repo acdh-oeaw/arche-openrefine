@@ -7,8 +7,7 @@ Allows to use the ARCHE Suite as a reconciliation backend for the [OpenRefine](h
 ## Supported features
 
 * Reconcile endpoint based on the full text search over the repository content
-* Preview endpoint
-  Implementing as a a redirection to the {repositoryApiBaseURL}/{resourceId}/metadata
+* Preview endpoint implemented as a a redirection to the `{repositoryApiBaseURL}/{resourceId}/metadata`
 * Suggest endpoint for entities, properties and types
 
 ### Scoring algorithm
@@ -33,4 +32,4 @@ Allows to use the ARCHE Suite as a reconciliation backend for the [OpenRefine](h
 
 ## Sample instance
 
-A sample instance which is running on top of the [ARCHE](http://arche.acdh.oeaw.ac.at/) repository has its manifest at arche.acdh.oeaw.ac.at/openrefine/reconcile.
+A sample instance which is running on top of the [ARCHE](http://arche.acdh.oeaw.ac.at/) repository has its manifest at https://arche.acdh.oeaw.ac.at/openrefine/reconcile.
